@@ -1,0 +1,17 @@
+{
+	"name": "@calmdownval/mini-dom",
+	"version": "0.0.1",
+	"type": "module",
+	"main": "src/index.mjs",
+	"license": "MIT",
+	"description": "minimal browser-style DOM implementation",
+	"keywords": [
+		"dom",
+		"document",
+		"model"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vaclavlahuta/mini-dom.git"
+	}
+}
