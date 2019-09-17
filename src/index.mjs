@@ -5,6 +5,7 @@ import ClassList from './ClassList.mjs';
 import Comment from './Comment.mjs';
 import Document from './Document.mjs';
 import DocumentType from './DocumentType.mjs';
+import DOMImplementation from './DOMImplementation.mjs';
 import Element from './Element.mjs';
 import Node from './Node.mjs';
 import ProcessingInstruction from './ProcessingInstruction.mjs';
@@ -18,6 +19,7 @@ export {
 	Comment,
 	Document,
 	DocumentType,
+	DOMImplementation,
 	Element,
 	Node,
 	ProcessingInstruction,

@@ -33,6 +33,11 @@ export default class CharacterData extends Node
 		this.data = value;
 	}
 
+	get textContent()
+	{
+		return this.#data;
+	}
+
 	appendData(data)
 	{
 		this.#data += data;

@@ -24,7 +24,7 @@ export default class ProcessingInstruction extends CharacterData
 
 	get nodeName()
 	{
-		return '#processing-instruction'; // TODO: validate this is the standard
+		return this.#target;
 	}
 
 	get nodeType()

@@ -5,7 +5,7 @@ export default class CDATASection extends CharacterData
 {
 	get nodeName()
 	{
-		return '#cdata'; // TODO: validate this is the standard
+		return '#cdata-section';
 	}
 
 	get nodeType()

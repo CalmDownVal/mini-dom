@@ -1,7 +1,4 @@
-function isElement(node)
-{
-	return node.nodeType === Node.ELEMENT_NODE;
-}
+import NotImplementedError from './NotImplementedError.mjs';
 
 /**
  * @abstract
@@ -17,82 +14,15 @@ export default class Node
 	static DOCUMENT_TYPE_NODE = 10;
 
 	#childNodes = [];
-	#children = null;
-	#document = null;
 	#nextSibling = null;
+	#ownerDocument = null;
 	#parentNode = null;
 	#previousSibling = null;
-
-	// abstract get nodeName
-	// abstract get nodeType
-
-	get childElementCount()
-	{
-		return this.children.length;
-	}
+	#isConnected = false;
 
 	get childNodes()
 	{
 		return this.#childNodes;
-	}
-
-	get children()
-	{
-		return this.#children || (this.#children = this.#childNodes.filter(isElement));
-	}
-
-	get document()
-	{
-		if (!this.#document && this.#parentNode)
-		{
-			this.#document = this.#parentNode.document;
-		}
-		return this.#document;
-	}
-
-	get nextElementSibling()
-	{
-		let sibling = this.#nextSibling;
-		while (sibling && !isElement(sibling))
-		{
-			sibling = sibling.#nextSibling;
-		}
-		return sibling;
-	}
-
-	get nextSibling()
-	{
-		return this.#nextSibling;
-	}
-
-	get nodeValue()
-	{
-		return null;
-	}
-
-	get parentElement()
-	{
-		return this.#parentNode && isElement(this.#parentNode) ? this.#parentNode : null;
-	}
-
-	get parentNode()
-	{
-		return this.#parentNode;
-	}
-
-	get previousElementSibling()
-	{
-		let sibling = this.#previousSibling;
-		while (sibling && !isElement(sibling))
-		{
-			sibling = sibling.#previousSibling;
-		}
-		return sibling;
-	}
-
-	get previousSibling()
-	{
-		return this.#previousSibling;
 	}
 
 	get firstChild()
@@ -100,9 +30,9 @@ export default class Node
 		return this.#childNodes.length === 0 ? null : this.#childNodes[0];
 	}
 
-	get firstElementChild()
+	get isConnected()
 	{
-		return this.#childNodes.find(isElement) || null;
+		return Boolean(this.ownerDocument);
 	}
 
 	get lastChild()
@@ -111,27 +41,76 @@ export default class Node
 		return length === 0 ? null : this.#childNodes[length - 1];
 	}
 
-	get lastElementChild()
+	get nextSibling()
 	{
-		// can't use .find here as we need to search from the end
-		const length = this.#childNodes.length;
-		for (let i = length - 1; i !== 0; --i)
-		{
-			const node = this.#childNodes[i];
-			if (isElement(node))
-			{
-				return node;
-			}
-		}
+		return this.#nextSibling;
+	}
+
+	/**
+	 * @abstract
+	 */
+	get nodeName()
+	{
+		throw new NotImplementedError();
+	}
+
+	/**
+	 * @abstract
+	 */
+	get nodeType()
+	{
+		throw new NotImplementedError();
+	}
+
+	get nodeValue()
+	{
 		return null;
+	}
+
+	get ownerDocument()
+	{
+		if (!this.#ownerDocument && this.#parentNode)
+		{
+			this.#ownerDocument = this.#parentNode.ownerDocument;
+		}
+		return this.#ownerDocument;
+	}
+
+	get parentNode()
+	{
+		return this.#parentNode;
+	}
+
+	get previousSibling()
+	{
+		return this.#previousSibling;
+	}
+
+	get textContent()
+	{
+		return null;
+	}
+
+	set textContent(value)
+	{
+		for (const child of this.#childNodes)
+		{
+			this.#disconnect(child);
+		}
+
+		this.#childNodes = [];
+
+		const document = this.ownerDocument;
+		if (document)
+		{
+			this.appendChild(document.createTextNode(value));
+		}
 	}
 
 	appendChild(newChild)
 	{
 		this.#assertSupportsChildren();
 
-		newChild.#document = this.#document;
-		newChild.#parentNode = this;
 		newChild.#nextSibling = null;
 
 		const length = this.#childNodes.length;
@@ -147,9 +126,48 @@ export default class Node
 		}
 
 		this.#childNodes.push(newChild);
-		this.#children = null;
-		newChild._onConnected();
+		this.#connect(newChild);
 		return newChild;
+	}
+
+	// cloneNode(deep = false)
+	// {
+	// }
+
+	// compareDocumentPosition(otherNode)
+	// {
+	// }
+
+	contains(otherNode)
+	{
+		if (otherNode === this)
+		{
+			return true;
+		}
+
+		for (const child of this.#childNodes)
+		{
+			if (child.contains(otherNode))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	// getBoxQuads()
+	// {
+	// }
+
+	getRootNode()
+	{
+		return this.ownerDocument;
+	}
+
+	hasChildNodes()
+	{
+		return this.#childNodes.length !== 0;
 	}
 
 	insertBefore(newChild, refChild)
@@ -167,8 +185,6 @@ export default class Node
 			throw new Error('refChild tis not a child of this Node.');
 		}
 
-		newChild.#document = this.#document;
-		newChild.#parentNode = this;
 		if (index !== 0)
 		{
 			const previous = this.#childNodes[index - 1];
@@ -183,9 +199,95 @@ export default class Node
 		newChild.#nextSibling = refChild;
 		refChild.#previousSibling = newChild;
 		this.#childNodes.splice(index, 0, newChild);
-		this.#children = null;
-		newChild._onConnected();
+		this.#connect(newChild);
 		return newChild;
+	}
+
+	isDefaultNamespace(namespaceURI)
+	{
+		// TODO
+	}
+
+	// isEqualNode(otherNode)
+	// {
+	// }
+
+	isSameNode(otherNode)
+	{
+		return otherNode === this;
+	}
+
+	lookupPrefix(namespaceURI)
+	{
+		// TODO
+	}
+
+	lookupNamespaceURI(prefix)
+	{
+		// TODO
+	}
+
+	normalize()
+	{
+		let iFrom = null;
+		let iTo = null;
+		let length = this.#childNodes.length;
+		let i = 0;
+
+		for (; i < length; ++i)
+		{
+			// find consecutive text nodes
+			if (this.#childNodes[i].nodeType === Node.TEXT_NODE)
+			{
+				if (iFrom === null)
+				{
+					iFrom = i;
+				}
+				iTo = i;
+			}
+			else if (iFrom !== null)
+			{
+				// merge text contents
+				let text = '';
+				let j = iFrom;
+				for (; j !== jTo; ++j)
+				{
+					text += this.#childNodes[j].nodeValue;
+				}
+
+				// use the first for the concat string (unless it's empty)
+				if (text)
+				{
+					this.#childNodes[iFrom++].nodeValue = text;
+				}
+
+				// delete all the other nodes
+				if (iFrom !== iTo)
+				{
+					const deleted = this.#childNodes.splice(iFrom, iTo - iFrom);
+					const previous = deleted[0].previousSibling;
+					const next = deleted[deleted.length - 1].nextSibling;
+
+					if (previous)
+					{
+						previous.#nextSibling = next;
+					}
+
+					if (next)
+					{
+						next.#previousSibling = previous;
+					}
+
+					for (const node in deleted)
+					{
+						this.#disconnect(node);
+					}
+				}
+
+				iFrom = null;
+				iTo = null;
+			}
+		}
 	}
 
 	removeChild(oldChild)
@@ -195,21 +297,15 @@ export default class Node
 		const index = this.#childNodes.indexOf(oldChild);
 		if (index === -1)
 		{
-			throw new Error('The node to be removed is not a child of this Node.');
+			throw new Error('oldChild is not a child of this Node.');
 		}
 
-		oldChild.#document =
-		oldChild.#parentNode =
-		oldChild.#nextSibling =
-		oldChild.#previousSibling = null;
 		this.#childNodes.splice(index, 1);
-		this.#children = null;
-
 		if (index === 0)
 		{
-			if (index !== this.#childNodes.length)
+			if (this.#childNodes.length !== 0)
 			{
-				this.#childNodes[index].#previousSibling = null;
+				this.#childNodes[0].#previousSibling = null;
 			}
 		}
 		else
@@ -227,18 +323,76 @@ export default class Node
 			}
 		}
 
-		oldChild._onDisconnected();
+		this.#disconnect(oldChild);
+		return oldChild;
+	}
+
+	replaceChild(newChild, oldChild)
+	{
+		this.#assertSupportsChildren();
+
+		const index = this.#childNodes.indexOf(oldChild);
+		if (index === -1)
+		{
+			throw new Error('oldChild is not a child of this Node.');
+		}
+
+		this.#childNodes[index] = newChild;
+		if (index === 0)
+		{
+			if (this.#childNodes.length === 1)
+			{
+				newChild.#nextSibling = null;
+				newChild.#previousSibling = null;
+			}
+			else
+			{
+				const next = this.#childNodes[1];
+				newChild.#previousSibling = null;
+				newChild.#nextSibling = next;
+				next.#previousSibling = newChild;
+			}
+		}
+		else
+		{
+			const previous = this.#childNodes[index - 1];
+			if (index + 1 === this.#childNodes.length)
+			{
+				newChild.#previousSibling = previous;
+				newChild.#nextSibling = null;
+				previous.#nextSibling = newChild;
+			}
+			else
+			{
+				const next = this.#childNodes[index + 1];
+				newChild.#previousSibling = previous;
+				newChild.#nextSibling = next;
+				previous.#nextSibling = newChild;
+				next.#previousSibling = newChild;
+			}
+		}
+
+		this.#connect(newChild);
+		this.#disconnect(oldChild);
 		return oldChild;
 	}
 
 	_onConnected()
 	{
-		this.connectedCallback && this.connectedCallback();
+		if (!this.#isConnected)
+		{
+			this.#isConnected = true;
+			this.connectedCallback && this.connectedCallback();
+		}
 	}
 
 	_onDisconnected()
 	{
-		this.disconnectedCallback && this.disconnectedCallback();
+		if (this.#isConnected)
+		{
+			this.#isConnected = false;
+			this.disconnectedCallback && this.disconnectedCallback();
+		}
 	}
 
 	// FUTURE: use private method syntax
@@ -248,5 +402,23 @@ export default class Node
 		{
 			throw new Error('This Node does not support children.');
 		}
-	}
+	};
+
+	// FUTURE: use private method syntax
+	#connect = node =>
+	{
+		node.#ownerDocument = this.ownerDocument;
+		node.#parentNode = this;
+		node._onConnected();
+	};
+
+	// FUTURE: use private method syntax
+	#disconnect = node =>
+	{
+		node.#ownerDocument = null;
+		node.#parentNode = null;
+		node.#nextSibling = null;
+		node.#previousSibling = null;
+		node._onDisconnected();
+	};
 }

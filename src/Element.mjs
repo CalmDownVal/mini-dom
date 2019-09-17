@@ -1,14 +1,16 @@
 import Node from './Node.mjs';
+import ChildNode from './mixins/ChildNode.mjs';
+import DocumentOrElement from './mixins/DocumentOrElement.mjs';
 import Attr from './Attr.mjs';
 import ClassList from './ClassList.mjs';
-import { stringify } from './utils.mjs';
+import { stringify, isElement } from './utils.mjs';
 
-function getName(attr)
+function getName(obj)
 {
-	return attr.name;
+	return obj.name;
 }
 
-export default class Element extends Node
+export default class Element extends DocumentOrElement(ChildNode(Node))
 {
 	static supportsChildren = true;
 
@@ -20,7 +22,7 @@ export default class Element extends Node
 
 	constructor(localName)
 	{
-		super(true);
+		super();
 		this.localName = localName;
 	}
 
@@ -78,6 +80,16 @@ export default class Element extends Node
 		this.#namespaceURI = stringify(value, true, true);
 	}
 
+	get nextElementSibling()
+	{
+		let sibling = this.nextSibling;
+		while (sibling && !isElement(sibling))
+		{
+			sibling = sibling.nextSibling;
+		}
+		return sibling;
+	}
+
 	get nodeName()
 	{
 		return this.tagName;
@@ -98,12 +110,40 @@ export default class Element extends Node
 		this.#prefix = stringify(value, false, true);
 	}
 
+	get previousElementSibling()
+	{
+		let sibling = this.previousSibling;
+		while (sibling && !isElement(sibling))
+		{
+			sibling = sibling.previousSibling;
+		}
+		return sibling;
+	}
+
 	get tagName()
 	{
 		return this.#prefix ? `${this.#prefix}:${this.#localName}` : this.#localName;
 	}
 
-	// attributes
+	get textContent()
+	{
+		let content = '';
+		for (const node of this.childNodes)
+		{
+			if (node.nodeType === Node.COMMENT_NODE || node.nodeType === Node.PROCESSING_INSTRUCTION_NODE)
+			{
+				continue;
+			}
+			content += node.textContent;
+		}
+		return content;
+	}
+
+	closest(selector)
+	{
+		// TODO
+	}
+
 	getAttribute(attrName)
 	{
 		const node = this.getAttributeNode(attrName);
@@ -115,54 +155,48 @@ export default class Element extends Node
 		return this.#attributes.map(getName);
 	}
 
-	hasAttribute(attrName)
-	{
-		return !!this.getAttributeNode(attrName);
-	}
-
-	removeAttribute(attrName)
-	{
-		const attr = this.getAttributeNode(attrName);
-		return attr ? !!this.removeAttributeNode(attr) : false;
-	}
-
-	setAttribute(attrName, value)
-	{
-		const attr = new Attr(attrName);
-		attr.value = value;
-		this.setAttributeNode(attr);
-	}
-
-	// attributes with namespace
 	getAttributeNS(namespace, attrName)
 	{
 		const node = this.getAttributeNodeNS(namespace, attrName);
 		return node && node.value;
 	}
 
+	getAttributeNode(attrName)
+	{
+		return this.getAttributeNodeNS(null, attrName);
+	}
+
+	getAttributeNodeNS(namespace, attrName)
+	{
+		const index = this.#indexOfAttributeNS(namespace, attrName);
+		return index === -1 ? null : this.#attributes[index];
+	}
+
+	hasAttribute(attrName)
+	{
+		return Boolean(this.getAttributeNode(attrName));
+	}
+
 	hasAttributeNS(namespace, attrName)
 	{
-		return !!this.getAttributeNodeNS(namespace, attrName);
+		return Boolean(this.getAttributeNodeNS(namespace, attrName));
+	}
+
+	hasAttributes()
+	{
+		return this.#attributes.length !== 0;
+	}
+
+	removeAttribute(attrName)
+	{
+		const attr = this.getAttributeNode(attrName);
+		return attr ? Boolean(this.removeAttributeNode(attr)) : false;
 	}
 
 	removeAttributeNS(namespace, attrName)
 	{
 		const attr = this.getAttributeNodeNS(namespace, attrName);
-		return attr ? !!this.removeAttributeNode(namespace, attrName) : false;
-	}
-
-	setAttributeNS(namespace, attrName, value)
-	{
-		const attr = new Attr(attrName);
-		attr.namespaceURI = namespace;
-		attr.value = value;
-		this.setAttributeNodeNS(attr);
-	}
-
-	// attribute nodes
-	getAttributeNode(attrName)
-	{
-		return this.getAttributeNodeNS(null, attrName);
+		return attr ? Boolean(this.removeAttributeNode(namespace, attrName)) : false;
 	}
 
 	removeAttributeNode(attrNode)
@@ -179,16 +213,24 @@ export default class Element extends Node
 		return attrNode;
 	}
 
+	setAttribute(attrName, value)
+	{
+		const attr = new Attr(attrName);
+		attr.value = value;
+		this.setAttributeNode(attr);
+	}
+
+	setAttributeNS(namespace, attrName, value)
+	{
+		const attr = new Attr(attrName);
+		attr.namespaceURI = namespace;
+		attr.value = value;
+		this.setAttributeNodeNS(attr);
+	}
+
 	setAttributeNode(attrNode)
 	{
 		return this.setAttributeNodeNS(attrNode);
-	}
-
-	// attribute nodes with namespace
-	getAttributeNodeNS(namespace, attrName)
-	{
-		const index = this.#indexOfAttributeNS(namespace, attrName);
-		return index === -1 ? null : this.#attributes[index];
 	}
 
 	setAttributeNodeNS(attrNode)
@@ -212,34 +254,17 @@ export default class Element extends Node
 		return replacedAttr;
 	}
 
-	// querying
-	getElementsByClassName(className)
-	{
-		return this.#filterDescendants(node => node.classList.contains(className));
-	}
-
-	getElementsByTagName(tagName)
-	{
-		return this.#filterDescendants(node => node.tagName === tagName);
-	}
-
-	querySelector(selector)
-	{
-		// TODO
-	}
-
-	querySelectorAll(selector)
-	{
-		// TODO
-	}
-
 	// callbacks
 	_onConnected()
 	{
 		const id = this.id;
 		if (id)
 		{
-			document._onIdAdded(this, id);
+			const document = this.ownerDocument;
+			if (document)
+			{
+				document._idAddedCallback(this, id);
+			}
 		}
 		super._onConnected();
 	}
@@ -249,7 +274,11 @@ export default class Element extends Node
 		const id = this.id;
 		if (id)
 		{
-			document._onIdRemoved(this, id);
+			const document = this.ownerDocument;
+			if (document)
+			{
+				document._idRemovedCallback(this, id);
+			}
 		}
 		super._onDisconnected();
 	}
@@ -260,7 +289,7 @@ export default class Element extends Node
 		{
 			case 'id':
 			{
-				const document = this.document;
+				const document = this.ownerDocument;
 				if (document)
 				{
 					document._idRemovedCallback(this, oldValue);
@@ -298,19 +327,5 @@ export default class Element extends Node
 			}
 		}
 		return -1;
-	}
-
-	// FUTURE: use private method syntax
-	#filterDescendants = (filter, list = []) =>
-	{
-		for (const child of this.children)
-		{
-			if (filter(child))
-			{
-				list.push(child);
-			}
-			child.#filterDescendants(filter, list);
-		}
-		return list;
-	}
+	};
 }

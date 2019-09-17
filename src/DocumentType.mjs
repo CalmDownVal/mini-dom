@@ -1,11 +1,37 @@
 import Node from './Node.mjs';
-import CharacterData from './CharacterData.mjs';
 
-export default class DocumentType extends CharacterData
+export default class DocumentType extends Node
 {
+	#qualifiedNameStr;
+	#publicId;
+	#systemId;
+
+	constructor(qualifiedNameStr, publicId, systemId)
+	{
+		super();
+		this.#qualifiedNameStr = qualifiedNameStr;
+		this.#publicId = publicId;
+		this.#systemId = systemId;
+	}
+
+	get qualifiedNameStr()
+	{
+		return this.#qualifiedNameStr;
+	}
+
+	get publicId()
+	{
+		return this.#publicId;
+	}
+
+	get systemId()
+	{
+		return this.#systemId;
+	}
+
 	get nodeName()
 	{
-		return '#document-type'; // TODO: validate this is the standard
+		return this.#qualifiedNameStr;
 	}
 
 	get nodeType()

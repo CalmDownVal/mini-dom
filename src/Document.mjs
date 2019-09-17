@@ -1,9 +1,10 @@
 import Attr from './Attr.mjs';
 import CDATASection from './CDATASection.mjs';
 import Comment from './Comment.mjs';
-import DocumentType from './DocumentType.mjs';
+import DOMImplementation from './DOMImplementation.mjs';
 import Element from './Element.mjs';
 import Node from './Node.mjs';
+import DocumentOrElement from './mixins/DocumentOrElement.mjs';
 import ProcessingInstruction from './ProcessingInstruction.mjs';
 import Text from './Text.mjs';
 
@@ -28,18 +29,19 @@ function findId(root, id)
 	return null;
 }
 
-export default class Document extends Node
+export default class Document extends DocumentOrElement(Node)
 {
 	static supportsChildren = true;
+	static implementation = new DOMImplementation();
 
 	#ids = new Map();
 
 	constructor()
 	{
-		super(true);
+		super();
 	}
 
-	get document()
+	get ownerDocument()
 	{
 		return this;
 	}
@@ -80,13 +82,6 @@ export default class Document extends Node
 		return node;
 	}
 
-	createDocumentType(data)
-	{
-		const node = new DocumentType();
-		node.data = data;
-		return node;
-	}
-
 	createElement(qualifiedName)
 	{
 		return new Element(qualifiedName);
@@ -120,7 +115,10 @@ export default class Document extends Node
 
 	_idAddedCallback(node, newId)
 	{
-		newId && this.#ids.set(newId, node);
+		if (newId)
+		{
+			this.#ids.set(newId, node);
+		}
 	}
 
 	_idRemovedCallback(node, oldId)
