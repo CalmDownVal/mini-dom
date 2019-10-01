@@ -33,7 +33,17 @@ export default Mixin(T => class extends T
 
 	replaceWith(...nodes)
 	{
-		this.after(...nodes);
-		this.remove();
+		let i = nodes.length - 1;
+		let prev = asNode(nodes[i]);
+
+		const parent = this.parentNode;
+		parent.replaceChild(prev, this);
+
+		while (i !== 0)
+		{
+			const node = asNode(nodes[i--]);
+			parent.insertBefore(node, prev);
+			prev = node;
+		}
 	}
 });
