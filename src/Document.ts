@@ -131,6 +131,18 @@ class Document extends DocumentOrElement
 		const elem = this.firstElementChild;
 		return elem ? elem.isDefaultNamespace(namespaceURI) : false;
 	}
+
+	public lookupNamespaceURI(prefix: string | null)
+	{
+		const elem = this.firstElementChild;
+		return elem && elem.lookupNamespaceURI(prefix);
+	}
+
+	public lookupPrefix(namespaceURI: string | null)
+	{
+		const elem = this.firstElementChild;
+		return elem && elem.lookupPrefix(namespaceURI);
+	}
 }
 
 export default Document;

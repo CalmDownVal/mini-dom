@@ -5,11 +5,7 @@ This is a work in progress.
 
 ## ToDo
 
-- namespace methods
-  - `Node.isDefaultNamespace`
-  - `Node.lookupPrefix`
-  - `Node.lookupNamespaceURI`
-- CSS selectors
+- CSS selector methods
   - `DocumentOrElement.querySelector`
   - `DocumentOrElement.querySelectorAll`
   - `Element.closest`

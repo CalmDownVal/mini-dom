@@ -73,17 +73,15 @@ abstract class DocumentOrElement extends Node
 		return filterDescendants(this, (elem) => elem.namespaceURI === namespaceURI && elem.localName === localName);
 	}
 
-	public querySelector(selector: string): Element | null
-	{
-		// TODO
-		return null;
-	}
+	// public querySelector(selector: string): Element | null
+	// {
+	// 	// TODO
+	// }
 
-	public querySelectorAll(selector: string): Element[]
-	{
-		// TODO
-		return [];
-	}
+	// public querySelectorAll(selector: string): Element[]
+	// {
+	// 	// TODO
+	// }
 }
 
 export default DocumentOrElement;

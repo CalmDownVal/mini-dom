@@ -225,7 +225,7 @@ abstract class Node
 		return newChild;
 	}
 
-	public isDefaultNamespace(namespaceURI: string | null): boolean
+	public isDefaultNamespace(namespaceURI: string | null)
 	{
 		const parent = this.parentElement;
 		return Boolean(parent && parent.isDefaultNamespace(namespaceURI));
@@ -241,15 +241,17 @@ abstract class Node
 		return otherNode === this;
 	}
 
-	// public lookupPrefix(namespaceURI)
-	// {
-	// 	// TODO
-	// }
+	public lookupNamespaceURI(prefix: string | null)
+	{
+		const parent = this.parentElement;
+		return parent && parent.lookupNamespaceURI(prefix);
+	}
 
-	// public lookupNamespaceURI(prefix)
-	// {
-	// 	// TODO
-	// }
+	public lookupPrefix(namespaceURI: string | null)
+	{
+		const parent = this.parentElement;
+		return parent && parent.lookupPrefix(namespaceURI);
+	}
 
 	public normalize()
 	{

@@ -149,10 +149,10 @@ class Element extends Node implements INamespaceMember
 		return content;
 	}
 
-	public closest(selector: string)
-	{
-		// TODO
-	}
+	// public closest(selector: string)
+	// {
+	// 	// TODO
+	// }
 
 	public getAttribute(attrName: string)
 	{
@@ -203,13 +203,49 @@ class Element extends Node implements INamespaceMember
 			return this._namespaceURI === namespaceURI;
 		}
 
-		const xmlns = this.getAttributeNode('xmlns');
-		if (xmlns)
+		const attr = this.getAttributeNode('xmlns');
+		if (attr)
 		{
-			return xmlns.value === namespaceURI;
+			return attr.value === namespaceURI;
 		}
 
 		return super.isDefaultNamespace(namespaceURI);
+	}
+
+	public lookupNamespaceURI(prefix: string | null): string | null
+	{
+		if (this._namespaceURI && this._prefix === prefix)
+		{
+			return this._namespaceURI;
+		}
+
+		for (const attr of this._attributes)
+		{
+			if ((attr.prefix === 'xmlns' && attr.localName === prefix) || (!prefix && attr.localName === 'xmlns'))
+			{
+				return attr.value;
+			}
+		}
+
+		return super.lookupNamespaceURI(prefix);
+	}
+
+	public lookupPrefix(namespaceURI: string | null): string | null
+	{
+		if (this._namespaceURI === namespaceURI)
+		{
+			return this._prefix;
+		}
+
+		for (const attr of this._attributes)
+		{
+			if (attr.prefix === 'xmlns' && attr.value === namespaceURI)
+			{
+				return attr.localName;
+			}
+		}
+
+		return super.lookupPrefix(namespaceURI);
 	}
 
 	public removeAttribute(attrName: string)
