@@ -17,6 +17,7 @@
 	"scripts": {
 		"build": "npm run lint; tsc; script/jackson.sh",
 		"build:clean": "rm -rf dist/* && npm run build",
-		"lint": "tslint --project tsconfig.json || true"
+		"lint": "tslint --project tsconfig.json || true",
+		"prepublish": "npm run build:clean"
 	}
 }
