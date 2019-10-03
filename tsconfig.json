@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"charset": "utf8",
+		"declaration": true,
+		"lib": [
+			"esnext"
+		],
+		"module": "ESNext",
+		"newLine": "lf",
+		"outDir": "./dist",
+		"strict": true,
+		"target": "ESNext"
+	},
+	"files": [
+		"src/index.ts"
+	]
+}

@@ -1,6 +1,7 @@
-.vscode/
-script/
-test/
-.eslintrc.json
+.vscode
+script
+src
+test
+.editorconfig
 .gitignore
-*.md
+tsconfig.json

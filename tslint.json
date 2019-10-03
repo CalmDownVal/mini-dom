@@ -1,0 +1,14 @@
+{
+	"defaultSeverity": "error",
+	"extends": [
+		"tslint:recommended"
+	],
+	"rules": {
+		"eofline": true,
+		"indent": [ true, "tabs", 4 ],
+		"one-line": false,
+		"quotemark": [ true, "single", "avoid-template" ],
+		"trailing-comma": false,
+		"variable-name": [ true, "check-format", "allow-leading-underscore", "allow-pascal-case" ]
+	}
+}

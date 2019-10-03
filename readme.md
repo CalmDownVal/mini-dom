@@ -9,8 +9,12 @@ This is a work in progress.
   - `Node.isDefaultNamespace`
   - `Node.lookupPrefix`
   - `Node.lookupNamespaceURI`
-  - `DocumentOrElement.getElementsByTagNameNS`
 - CSS selectors
   - `DocumentOrElement.querySelector`
   - `DocumentOrElement.querySelectorAll`
   - `Element.closest`
+- util methods
+  - `Node.cloneNode`
+  - `Node.compareDocumentPosition`
+  - `Node.isEqualNode`
+- tests, tests, tests
