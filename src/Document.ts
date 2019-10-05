@@ -2,15 +2,17 @@ import Attr from './Attr';
 import CDATASection from './CDATASection';
 import Comment from './Comment';
 import DocumentOrElement from './DocumentOrElement';
+import DocumentType from './DocumentType';
 import DOMImplementation from './DOMImplementation';
 import Element from './Element';
 import Node from './Node';
+import NodeType from './NodeType';
 import ProcessingInstruction from './ProcessingInstruction';
 import Text from './Text';
 
 function findId(root: Node, id: string): Element | null
 {
-	if (id && root.nodeType === Node.ELEMENT_NODE)
+	if (id && root.nodeType === NodeType.ELEMENT_NODE)
 	{
 		if ((root as Element).id === id)
 		{
@@ -31,8 +33,6 @@ function findId(root: Node, id: string): Element | null
 
 class Document extends DocumentOrElement
 {
-	public static readonly implementation = new DOMImplementation();
-
 	public static registerId(doc: Document, elem: Element, newId: string | null)
 	{
 		if (newId)
@@ -53,18 +53,56 @@ class Document extends DocumentOrElement
 		}
 	}
 
-	protected supportsChildren = true;
+	private readonly idMap: Map<string, Element> = new Map();
+	private readonly _implementation = new DOMImplementation(this);
 
-	private idMap: Map<string, Element> = new Map();
+	public constructor(namespaceURI: string | null, qualifiedNameStr: string, documentType: DocumentType | null = null)
+	{
+		super(null!); // silence, brand
+		this._ownerDocument = this;
+
+		if (documentType)
+		{
+			Node.setOwnerDocument(documentType, this);
+			this.appendChild(documentType);
+		}
+
+		const root = this.createElementNS(namespaceURI, qualifiedNameStr);
+		this.appendChild(root);
+	}
+
+	public get body()
+	{
+		const body = this.documentElement.lastElementChild;
+		return body && body.tagName === 'body' ? body : null;
+	}
+
+	public get doctype()
+	{
+		for (const child of this._childNodes)
+		{
+			if (child.nodeType === NodeType.DOCUMENT_TYPE_NODE)
+			{
+				return child as DocumentType;
+			}
+		}
+		return null;
+	}
 
 	public get documentElement()
 	{
-		return this.firstElementChild;
+		return this.firstElementChild as Element;
 	}
 
-	public get ownerDocument()
+	public get head()
 	{
-		return this;
+		const head = this.documentElement.firstElementChild;
+		return head && head.tagName === 'head' ? head : null;
+	}
+
+	public get implementation()
+	{
+		return this._implementation;
 	}
 
 	public get nodeName()
@@ -74,7 +112,13 @@ class Document extends DocumentOrElement
 
 	public get nodeType()
 	{
-		return Node.DOCUMENT_NODE;
+		return NodeType.DOCUMENT_NODE;
+	}
+
+	public adoptNode(externalNode: Node)
+	{
+		Node.setOwnerDocument(externalNode, this);
+		return externalNode;
 	}
 
 	public createAttribute(qualifiedName: string)
@@ -91,34 +135,34 @@ class Document extends DocumentOrElement
 
 	public createCDATASection(data: string)
 	{
-		return new CDATASection(data);
+		return new CDATASection(this, data);
 	}
 
 	public createComment(data: string)
 	{
-		return new Comment(data);
+		return new Comment(this, data);
 	}
 
 	public createElement(qualifiedName: string)
 	{
-		return new Element(qualifiedName);
+		return new Element(this, qualifiedName);
 	}
 
 	public createElementNS(namespaceURI: string | null, qualifiedName: string)
 	{
-		const node = new Element(qualifiedName);
+		const node = new Element(this, qualifiedName);
 		node.namespaceURI = namespaceURI;
 		return node;
 	}
 
 	public createProcessingInstruction(target: string, data: string)
 	{
-		return new ProcessingInstruction(target, data);
+		return new ProcessingInstruction(this, target, data);
 	}
 
 	public createTextNode(data: string)
 	{
-		return new Text(data);
+		return new Text(this, data);
 	}
 
 	public getElementById(id: string)

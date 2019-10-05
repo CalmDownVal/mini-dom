@@ -3,6 +3,7 @@ script
 src
 test
 .editorconfig
+.eslintrc
 .gitignore
 tsconfig.json
 tslint.json

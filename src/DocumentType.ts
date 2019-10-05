@@ -1,3 +1,4 @@
+import Document from './Document';
 import Node from './Node';
 import NodeType from './NodeType';
 
@@ -7,9 +8,9 @@ class DocumentType extends Node
 	private _publicId: string;
 	private _systemId: string;
 
-	constructor(qualifiedNameStr: string, publicId: string, systemId: string)
+	constructor(ownerDocument: Document, qualifiedNameStr: string, publicId: string, systemId: string)
 	{
-		super();
+		super(ownerDocument);
 		this._qualifiedNameStr = qualifiedNameStr;
 		this._publicId = publicId;
 		this._systemId = systemId;

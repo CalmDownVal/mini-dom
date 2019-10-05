@@ -1,8 +1,8 @@
 import Attr from './Attr';
 import ClassList from './ClassList';
 import Document from './Document';
+import DocumentOrElement from './DocumentOrElement';
 import INamespaceMember from './interfaces/INamespaceMember';
-import Node from './Node';
 import NodeType from './NodeType';
 import { isElement, stringify, stringifyNull } from './utils';
 
@@ -11,7 +11,7 @@ function getName(attr: Attr)
 	return attr.name;
 }
 
-class Element extends Node implements INamespaceMember
+class Element extends DocumentOrElement implements INamespaceMember
 {
 	public static notifyAttributeChanged(source: Attr, oldValue: string | null, newValue: string | null)
 	{
@@ -22,17 +22,15 @@ class Element extends Node implements INamespaceMember
 		}
 	}
 
-	protected supportsChildren = true;
-
 	private _attributes: Attr[] = [];
 	private _classList?: ClassList;
 	private _localName: string = '';
 	private _namespaceURI: string | null = null;
 	private _prefix: string | null = null;
 
-	public constructor(localName: string)
+	public constructor(ownerDocument: Document, localName: string)
 	{
-		super();
+		super(ownerDocument);
 		this._localName = localName;
 	}
 
@@ -133,20 +131,6 @@ class Element extends Node implements INamespaceMember
 	public get tagName()
 	{
 		return this._prefix && this._namespaceURI ? `${this._prefix}:${this._localName}` : this._localName;
-	}
-
-	public get textContent()
-	{
-		let content = '';
-		for (const node of this.childNodes)
-		{
-			if (node.nodeType === NodeType.COMMENT_NODE || node.nodeType === NodeType.PROCESSING_INSTRUCTION_NODE)
-			{
-				continue;
-			}
-			content += node.textContent;
-		}
-		return content;
 	}
 
 	// public closest(selector: string)
@@ -318,17 +302,26 @@ class Element extends Node implements INamespaceMember
 		return replacedAttr;
 	}
 
-	// callbacks
+	protected getTextContent()
+	{
+		let content = '';
+		for (const node of this.childNodes)
+		{
+			if (node.nodeType === NodeType.COMMENT_NODE || node.nodeType === NodeType.PROCESSING_INSTRUCTION_NODE)
+			{
+				continue;
+			}
+			content += node.textContent;
+		}
+		return content;
+	}
+
 	protected onConnected()
 	{
 		const id = this.id;
 		if (id)
 		{
-			const document = this.ownerDocument;
-			if (document)
-			{
-				Document.registerId(document, this, id);
-			}
+			Document.registerId(this.ownerDocument, this, id);
 		}
 		super.onConnected();
 	}
@@ -338,11 +331,7 @@ class Element extends Node implements INamespaceMember
 		const id = this.id;
 		if (id)
 		{
-			const document = this.ownerDocument;
-			if (document)
-			{
-				Document.unregisterId(document, id);
-			}
+			Document.unregisterId(this.ownerDocument, id);
 		}
 		super.onDisconnected();
 	}
@@ -353,12 +342,8 @@ class Element extends Node implements INamespaceMember
 		{
 			case 'id':
 			{
-				const document = this.ownerDocument;
-				if (document)
-				{
-					Document.unregisterId(document, oldValue);
-					Document.registerId(document, this, newValue);
-				}
+				Document.unregisterId(this.ownerDocument, oldValue);
+				Document.registerId(this.ownerDocument, this, newValue);
 				break;
 			}
 

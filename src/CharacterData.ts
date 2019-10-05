@@ -1,3 +1,4 @@
+import Document from './Document';
 import Node from './Node';
 import { stringify } from './utils';
 
@@ -5,9 +6,9 @@ abstract class CharacterData extends Node
 {
 	private _data: string;
 
-	public constructor(data: string)
+	public constructor(ownerDocument: Document, data: string)
 	{
-		super();
+		super(ownerDocument);
 		this._data = data;
 	}
 

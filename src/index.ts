@@ -5,7 +5,7 @@ import ClassList from './ClassList';
 import Comment from './Comment';
 import Document from './Document';
 import DocumentType from './DocumentType';
-import DOMImplementation from './DOMImplementation';
+import DOMImplementation, { createDocument, createDocumentType, createHTMLDocument } from './DOMImplementation';
 import Element from './Element';
 import Node from './Node';
 import ProcessingInstruction from './ProcessingInstruction';
@@ -23,5 +23,8 @@ export {
 	Element,
 	Node,
 	ProcessingInstruction,
-	Text
+	Text,
+	createDocumentType,
+	createDocument,
+	createHTMLDocument
 };

@@ -9,6 +9,7 @@ This is a work in progress.
   - `DocumentOrElement.querySelector`
   - `DocumentOrElement.querySelectorAll`
   - `Element.closest`
+- optional case-insensitive tagNames for HTML documents
 - util methods
   - `Node.cloneNode`
   - `Node.compareDocumentPosition`

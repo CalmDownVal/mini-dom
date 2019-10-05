@@ -20,6 +20,8 @@ function filterDescendants(node: Node, filter: (elem: Element) => boolean, list:
 
 abstract class DocumentOrElement extends Node
 {
+	protected supportsChildren = true;
+
 	public get childElementCount()
 	{
 		let count = 0;
@@ -40,7 +42,7 @@ abstract class DocumentOrElement extends Node
 
 	public get firstElementChild()
 	{
-		return this.childNodes.find(isElement) || null;
+		return (this.childNodes.find(isElement) as Element | undefined) || null;
 	}
 
 	public get lastElementChild()
@@ -52,7 +54,7 @@ abstract class DocumentOrElement extends Node
 			const node = this.childNodes[i];
 			if (isElement(node))
 			{
-				return node;
+				return node as Element;
 			}
 		}
 		return null;

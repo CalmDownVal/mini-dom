@@ -1,5 +1,5 @@
 import CharacterData from './CharacterData';
-import Node from './Node';
+import NodeType from './NodeType';
 
 class Text extends CharacterData
 {
@@ -10,7 +10,7 @@ class Text extends CharacterData
 
 	get nodeType()
 	{
-		return Node.TEXT_NODE;
+		return NodeType.TEXT_NODE;
 	}
 }
 

@@ -4,12 +4,6 @@ import NodeType from './NodeType';
 import Text from './Text';
 import { callback, isElement } from './utils';
 
-// since we can be passed strings, we need to convert them to Text nodes first
-function asNode(obj: Node | string)
-{
-	return typeof obj === 'string' ? new Text(obj) : obj;
-}
-
 abstract class Node
 {
 	public static ELEMENT_NODE = NodeType.ELEMENT_NODE;
@@ -20,14 +14,24 @@ abstract class Node
 	public static DOCUMENT_NODE = NodeType.DOCUMENT_NODE;
 	public static DOCUMENT_TYPE_NODE = NodeType.DOCUMENT_TYPE_NODE;
 
-	protected supportsChildren: boolean = false;
+	public static setOwnerDocument(node: Node, ownerDocument: Document)
+	{
+		node._ownerDocument = ownerDocument;
+	}
 
-	private _childNodes: Node[] = [];
-	private _nextSibling: Node | null = null;
-	private _ownerDocument: Document | null = null;
-	private _parentNode: Node | null = null;
-	private _previousSibling: Node | null = null;
+	protected supportsChildren: boolean = false;
+	protected _childNodes: Node[] = [];
+	protected _nextSibling: Node | null = null;
+	protected _ownerDocument: Document;
+	protected _parentNode: Node | null = null;
+	protected _previousSibling: Node | null = null;
+
 	private _isConnected: boolean = false;
+
+	public constructor(ownerDocument: Document)
+	{
+		this._ownerDocument = ownerDocument;
+	}
 
 	public get childNodes()
 	{
@@ -64,13 +68,9 @@ abstract class Node
 		return null;
 	}
 
-	public get ownerDocument(): Document | null
+	public get ownerDocument()
 	{
-		if (!this._ownerDocument && this._parentNode)
-		{
-			this._ownerDocument = this._parentNode.ownerDocument;
-		}
-		return this._ownerDocument;
+		return this._ownerDocument!;
 	}
 
 	public get parentElement(): Element | null
@@ -88,12 +88,12 @@ abstract class Node
 		return this._previousSibling;
 	}
 
-	public get textContent(): string | null
+	public get textContent()
 	{
-		return null;
+		return this.getTextContent();
 	}
 
-	public set textContent(value: string | null)
+	public set textContent(value)
 	{
 		for (const child of this._childNodes)
 		{
@@ -101,11 +101,9 @@ abstract class Node
 		}
 
 		this._childNodes = [];
-
-		const document = this.ownerDocument;
-		if (document && value)
+		if (value)
 		{
-			this.appendChild(document.createTextNode(value));
+			this.appendChild(this._ownerDocument.createTextNode(value));
 		}
 	}
 
@@ -115,7 +113,7 @@ abstract class Node
 		{
 			for (const node of nodes)
 			{
-				this._parentNode.insertBefore(asNode(node), this._nextSibling);
+				this._parentNode.insertBefore(this.asNode(node), this._nextSibling);
 			}
 		}
 	}
@@ -123,6 +121,7 @@ abstract class Node
 	public appendChild(newChild: Node)
 	{
 		this.assertSupportsChildren();
+		this.assertValidChild(newChild);
 
 		newChild._nextSibling = null;
 
@@ -149,7 +148,7 @@ abstract class Node
 		{
 			for (const node of nodes)
 			{
-				this._parentNode.insertBefore(asNode(node), this);
+				this._parentNode.insertBefore(this.asNode(node), this);
 			}
 		}
 	}
@@ -184,7 +183,7 @@ abstract class Node
 
 	public getRootNode()
 	{
-		return this.ownerDocument;
+		return this._ownerDocument;
 	}
 
 	public hasChildNodes()
@@ -195,6 +194,7 @@ abstract class Node
 	public insertBefore(newChild: Node, refChild?: Node | null)
 	{
 		this.assertSupportsChildren();
+		this.assertValidChild(newChild);
 
 		if (!refChild)
 		{
@@ -263,7 +263,7 @@ abstract class Node
 		while (i !== length)
 		{
 			// find consecutive text nodes
-			if (this._childNodes[i].nodeType === Node.TEXT_NODE)
+			if (this._childNodes[i].nodeType === NodeType.TEXT_NODE)
 			{
 				if (iFrom === null)
 				{
@@ -367,6 +367,7 @@ abstract class Node
 	public replaceChild(newChild: Node, oldChild: Node)
 	{
 		this.assertSupportsChildren();
+		this.assertValidChild(newChild);
 
 		const index = this._childNodes.indexOf(oldChild);
 		if (index === -1)
@@ -419,16 +420,21 @@ abstract class Node
 		if (this._parentNode && nodes.length !== 0)
 		{
 			let i = nodes.length - 1;
-			let prev = asNode(nodes[i]);
+			let prev = this.asNode(nodes[i]);
 
 			this._parentNode.replaceChild(prev, this);
 			while (i !== 0)
 			{
-				const node = asNode(nodes[i--]);
+				const node = this.asNode(nodes[i--]);
 				this._parentNode.insertBefore(node, prev);
 				prev = node;
 			}
 		}
+	}
+
+	protected getTextContent(): string | null
+	{
+		return null;
 	}
 
 	protected onConnected()
@@ -449,6 +455,11 @@ abstract class Node
 		}
 	}
 
+	private asNode(obj: Node | string): Node
+	{
+		return typeof obj === 'string' ? this._ownerDocument.createTextNode(obj) : obj;
+	}
+
 	private assertSupportsChildren()
 	{
 		if (this.supportsChildren !== true)
@@ -457,16 +468,22 @@ abstract class Node
 		}
 	}
 
+	private assertValidChild(child: Node)
+	{
+		if (child._ownerDocument !== this._ownerDocument)
+		{
+			throw new Error('Node belongs to a different Document');
+		}
+	}
+
 	private connect(node: Node)
 	{
-		node._ownerDocument = this.ownerDocument;
 		node._parentNode = this;
 		node.onConnected();
 	}
 
 	private disconnect(node: Node)
 	{
-		node._ownerDocument = null;
 		node._parentNode = null;
 		node._nextSibling = null;
 		node._previousSibling = null;

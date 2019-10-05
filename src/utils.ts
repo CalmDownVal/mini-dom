@@ -1,6 +1,20 @@
 import Node from './Node';
 import NodeType from './NodeType';
 
+export function callback(instance: { [index: string]: any }, name: string, ...args: any[])
+{
+	const fn = instance[name];
+	if (typeof fn === 'function')
+	{
+		fn.call(instance, ...args);
+	}
+}
+
+export function isElement(node: Node)
+{
+	return node.nodeType === NodeType.ELEMENT_NODE;
+}
+
 export function stringify(value: any, allowEmpty: boolean = false): string
 {
 	switch (typeof value)
@@ -33,18 +47,4 @@ export function stringify(value: any, allowEmpty: boolean = false): string
 export function stringifyNull(value: any, allowEmpty: boolean = false)
 {
 	return value === null ? null : stringify(value, allowEmpty);
-}
-
-export function isElement(node: Node)
-{
-	return node.nodeType === NodeType.ELEMENT_NODE;
-}
-
-export function callback(instance: { [index: string]: any }, name: string, ...args: any[])
-{
-	const fn = instance[name];
-	if (typeof fn === 'function')
-	{
-		fn.call(instance, ...args);
-	}
 }

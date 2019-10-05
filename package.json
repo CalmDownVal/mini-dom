@@ -18,6 +18,12 @@
 		"build": "npm run lint; tsc; script/jackson.sh",
 		"build:clean": "rm -rf dist/* && npm run build",
 		"lint": "tslint --project tsconfig.json || true",
-		"prepare": "npm run build:clean"
+		"prepare": "npm run build:clean && npm run test",
+		"test": "npm run build && cross-env NODE_OPTIONS=\"--experimental-modules\" mocha --delay script/test.esm.js"
+	},
+	"devDependencies": {
+		"cross-env": "^6.0.3",
+		"glob": "^7.1.4",
+		"mocha": "^6.2.1"
 	}
 }

@@ -1,4 +1,5 @@
 import CharacterData from './CharacterData';
+import Document from './Document';
 import NodeType from './NodeType';
 import { stringify } from './utils';
 
@@ -6,9 +7,9 @@ class ProcessingInstruction extends CharacterData
 {
 	private _target: string;
 
-	constructor(target: string, data: string)
+	constructor(ownerDocument: Document, target: string, data: string)
 	{
-		super(data);
+		super(ownerDocument, data);
 		this._target = target;
 	}
 

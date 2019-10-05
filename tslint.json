@@ -5,10 +5,23 @@
 	],
 	"rules": {
 		"eofline": true,
-		"indent": [ true, "tabs", 4 ],
+		"indent": [
+			true,
+			"tabs",
+			4
+		],
 		"one-line": false,
-		"quotemark": [ true, "single", "avoid-template" ],
+		"quotemark": [
+			true,
+			"single",
+			"avoid-template"
+		],
 		"trailing-comma": false,
-		"variable-name": [ true, "check-format", "allow-leading-underscore", "allow-pascal-case" ]
+		"variable-name": [
+			true,
+			"check-format",
+			"allow-leading-underscore",
+			"allow-pascal-case"
+		]
 	}
 }
