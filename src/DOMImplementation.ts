@@ -1,12 +1,24 @@
 import Document from './Document';
 import DocumentType from './DocumentType';
+import Node from './Node';
 
 export function createDocument(
 	namespaceURI: string | null,
 	qualifiedNameStr: string,
 	documentType: DocumentType | null = null)
 {
-	return new Document(namespaceURI, qualifiedNameStr, documentType);
+	const document = new Document();
+
+	if (documentType)
+	{
+		Node.setOwnerDocument(documentType, document);
+		document.appendChild(documentType);
+	}
+
+	const root = document.createElementNS(namespaceURI, qualifiedNameStr);
+	document.appendChild(root);
+
+	return document;
 }
 
 export function createDocumentType(qualifiedNameStr: string, publicId: string, systemId: string)
@@ -17,7 +29,7 @@ export function createDocumentType(qualifiedNameStr: string, publicId: string, s
 export function createHTMLDocument(title: string | null = null)
 {
 	const dtd = new DocumentType(null!, 'html', '', '');
-	const doc = new Document(null, 'html', dtd);
+	const doc = createDocument(null, 'html', dtd);
 
 	const head = doc.createElement('head');
 	doc.documentElement.appendChild(head);

@@ -56,19 +56,10 @@ class Document extends DocumentOrElement
 	private readonly idMap: Map<string, Element> = new Map();
 	private readonly _implementation = new DOMImplementation(this);
 
-	public constructor(namespaceURI: string | null, qualifiedNameStr: string, documentType: DocumentType | null = null)
+	public constructor()
 	{
 		super(null!); // silence, brand
 		this._ownerDocument = this;
-
-		if (documentType)
-		{
-			Node.setOwnerDocument(documentType, this);
-			this.appendChild(documentType);
-		}
-
-		const root = this.createElementNS(namespaceURI, qualifiedNameStr);
-		this.appendChild(root);
 	}
 
 	public get body()
