@@ -4,7 +4,7 @@ import Document from './Document';
 import DocumentOrElement from './DocumentOrElement';
 import INamespaceMember from './interfaces/INamespaceMember';
 import NodeType from './NodeType';
-import { isElement, stringify, stringifyNull } from './utils';
+import { isElement, splitName } from './utils';
 
 function getName(attr: Attr)
 {
@@ -13,6 +13,20 @@ function getName(attr: Attr)
 
 class Element extends DocumentOrElement implements INamespaceMember
 {
+	public static create(ownerDocument: Document, qualifiedName: string)
+	{
+		return new Element(ownerDocument, qualifiedName);
+	}
+
+	public static createNS(ownerDocument: Document, namespaceURI: string | null, qualifiedName: string)
+	{
+		const parts = splitName(qualifiedName);
+		const elem = new Element(ownerDocument, parts[1]!);
+		elem._prefix = parts[0];
+		elem._namespaceURI = namespaceURI;
+		return elem;
+	}
+
 	public static notifyAttributeChanged(source: Attr, oldValue: string | null, newValue: string | null)
 	{
 		const element = source.ownerElement;
@@ -24,11 +38,11 @@ class Element extends DocumentOrElement implements INamespaceMember
 
 	private _attributes: Attr[] = [];
 	private _classList?: ClassList;
-	private _localName: string = '';
+	private _localName: string;
 	private _namespaceURI: string | null = null;
 	private _prefix: string | null = null;
 
-	public constructor(ownerDocument: Document, localName: string)
+	private constructor(ownerDocument: Document, localName: string)
 	{
 		super(ownerDocument);
 		this._localName = localName;
@@ -73,19 +87,9 @@ class Element extends DocumentOrElement implements INamespaceMember
 		return this._localName;
 	}
 
-	public set localName(value)
-	{
-		this._localName = stringify(value);
-	}
-
 	public get namespaceURI()
 	{
 		return this._namespaceURI;
-	}
-
-	public set namespaceURI(value)
-	{
-		this._namespaceURI = stringifyNull(value, true);
 	}
 
 	public get nextElementSibling()
@@ -113,11 +117,6 @@ class Element extends DocumentOrElement implements INamespaceMember
 		return this._prefix;
 	}
 
-	public set prefix(value)
-	{
-		this._prefix = stringifyNull(value);
-	}
-
 	public get previousElementSibling()
 	{
 		let sibling = this.previousSibling;
@@ -130,7 +129,7 @@ class Element extends DocumentOrElement implements INamespaceMember
 
 	public get tagName()
 	{
-		return this._prefix && this._namespaceURI ? `${this._prefix}:${this._localName}` : this._localName;
+		return this._prefix ? `${this._prefix}:${this._localName}` : this._localName;
 	}
 
 	// public closest(selector: string)
@@ -140,7 +139,8 @@ class Element extends DocumentOrElement implements INamespaceMember
 
 	public getAttribute(attrName: string)
 	{
-		return this.getAttributeNS(null, attrName);
+		const attr = this.getAttributeNode(attrName);
+		return attr && attr.value;
 	}
 
 	public getAttributeNames()
@@ -156,18 +156,20 @@ class Element extends DocumentOrElement implements INamespaceMember
 
 	public getAttributeNode(attrName: string)
 	{
-		return this.getAttributeNodeNS(null, attrName);
+		const index = this.indexOfAttribute(null, null, attrName);
+		return index === -1 ? null : this._attributes[index];
 	}
 
 	public getAttributeNodeNS(namespaceURI: string | null, attrName: string)
 	{
-		const index = this.indexOfAttributeNS(namespaceURI, attrName);
+		const parts = splitName(attrName);
+		const index = this.indexOfAttribute(namespaceURI, parts[0], parts[1]!);
 		return index === -1 ? null : this._attributes[index];
 	}
 
 	public hasAttribute(attrName: string)
 	{
-		return this.hasAttributeNS(null, attrName);
+		return Boolean(this.getAttributeNode(attrName));
 	}
 
 	public hasAttributeNS(namespaceURI: string | null, attrName: string)
@@ -234,7 +236,8 @@ class Element extends DocumentOrElement implements INamespaceMember
 
 	public removeAttribute(attrName: string)
 	{
-		return this.removeAttributeNS(null, attrName);
+		const attr = this.getAttributeNode(attrName);
+		return attr ? Boolean(this.removeAttributeNode(attr)) : false;
 	}
 
 	public removeAttributeNS(namespaceURI: string | null, attrName: string)
@@ -259,7 +262,15 @@ class Element extends DocumentOrElement implements INamespaceMember
 
 	public setAttribute(attrName: string, value: string | null)
 	{
-		this.setAttributeNS(null, attrName, value);
+		if (value === null)
+		{
+			this.removeAttribute(attrName);
+			return;
+		}
+
+		const attr = Attr.create(attrName);
+		attr.value = value;
+		this.setAttributeNode(attr);
 	}
 
 	public setAttributeNS(namespaceURI: string | null, attrName: string, value: string | null)
@@ -270,8 +281,8 @@ class Element extends DocumentOrElement implements INamespaceMember
 			return;
 		}
 
-		const attr = new Attr(attrName, value);
-		attr.namespaceURI = namespaceURI;
+		const attr = Attr.createNS(namespaceURI, attrName);
+		attr.value = value;
 		this.setAttributeNodeNS(attr);
 	}
 
@@ -284,7 +295,7 @@ class Element extends DocumentOrElement implements INamespaceMember
 	{
 		let replacedAttr = null;
 
-		const index = this.indexOfAttributeNS(attrNode.namespaceURI, attrNode.localName);
+		const index = this.indexOfAttribute(attrNode.namespaceURI, attrNode.prefix, attrNode.localName);
 		if (index === -1)
 		{
 			Attr.setOwnerElement(attrNode, this);
@@ -363,7 +374,7 @@ class Element extends DocumentOrElement implements INamespaceMember
 		}
 	}
 
-	private indexOfAttributeNS(namespaceURI: string | null, attrName: string)
+	private indexOfAttribute(namespaceURI: string | null, prefix: string | null, localName: string)
 	{
 		const attrs = this._attributes;
 		const length = attrs.length;
@@ -372,7 +383,9 @@ class Element extends DocumentOrElement implements INamespaceMember
 		while (i !== length)
 		{
 			const attr = attrs[i];
-			if (attr.localName === attrName && attr.namespaceURI === namespaceURI)
+			if (attr.namespaceURI === namespaceURI &&
+				attr.prefix === prefix &&
+				attr.localName === localName)
 			{
 				return i;
 			}

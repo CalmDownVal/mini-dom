@@ -1,9 +1,23 @@
 import Element from './Element';
 import INamespaceMember from './interfaces/INamespaceMember';
-import { stringify, stringifyNull } from './utils';
+import { splitName, stringify } from './utils';
 
 class Attr implements INamespaceMember
 {
+	public static create(qualifiedName: string)
+	{
+		return new Attr(qualifiedName);
+	}
+
+	public static createNS(namespaceURI: string | null, qualifiedName: string)
+	{
+		const parts = splitName(qualifiedName);
+		const attr = new Attr(parts[1]!);
+		attr._prefix = parts[0];
+		attr._namespaceURI = namespaceURI;
+		return attr;
+	}
+
 	public static setOwnerElement(attr: Attr, newOwnerElement: Element | null)
 	{
 		attr._ownerElement = newOwnerElement;
@@ -13,12 +27,11 @@ class Attr implements INamespaceMember
 	private _namespaceURI: string | null = null;
 	private _ownerElement: Element | null = null;
 	private _prefix: string | null = null;
-	private _value: string;
+	private _value: string = '';
 
-	public constructor(localName: string, value: string = '')
+	private constructor(localName: string)
 	{
 		this._localName = localName;
-		this._value = value;
 	}
 
 	public get localName()
@@ -26,24 +39,14 @@ class Attr implements INamespaceMember
 		return this._localName;
 	}
 
-	public set localName(value)
-	{
-		this._localName = stringify(value);
-	}
-
 	public get namespaceURI()
 	{
 		return this._namespaceURI;
 	}
 
-	public set namespaceURI(value)
-	{
-		this._namespaceURI = stringifyNull(value, true);
-	}
-
 	public get name()
 	{
-		return this._prefix && this._namespaceURI ? `${this._prefix}:${this._localName}` : this._localName;
+		return this._prefix ? `${this._prefix}:${this._localName}` : this._localName;
 	}
 
 	public get ownerElement()
@@ -54,11 +57,6 @@ class Attr implements INamespaceMember
 	public get prefix()
 	{
 		return this._prefix;
-	}
-
-	public set prefix(value)
-	{
-		this._prefix = stringifyNull(value);
 	}
 
 	public get value()

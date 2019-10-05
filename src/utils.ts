@@ -15,6 +15,14 @@ export function isElement(node: Node)
 	return node.nodeType === NodeType.ELEMENT_NODE;
 }
 
+export function splitName(name: string)
+{
+	const index = name.indexOf(':');
+	return index > 0 && index !== name.length
+		? [ name.slice(0, index), name.slice(index + 1) ]
+		: [ null, name ];
+}
+
 export function stringify(value: any, allowEmpty: boolean = false): string
 {
 	switch (typeof value)
@@ -42,9 +50,4 @@ export function stringify(value: any, allowEmpty: boolean = false): string
 	}
 
 	return value;
-}
-
-export function stringifyNull(value: any, allowEmpty: boolean = false)
-{
-	return value === null ? null : stringify(value, allowEmpty);
 }

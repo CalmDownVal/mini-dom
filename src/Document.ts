@@ -123,14 +123,12 @@ class Document extends DocumentOrElement
 
 	public createAttribute(qualifiedName: string)
 	{
-		return new Attr(qualifiedName);
+		return Attr.create(qualifiedName);
 	}
 
 	public createAttributeNS(namespaceURI: string | null, qualifiedName: string)
 	{
-		const attr = new Attr(qualifiedName);
-		attr.namespaceURI = namespaceURI;
-		return attr;
+		return Attr.createNS(namespaceURI, qualifiedName);
 	}
 
 	public createCDATASection(data: string)
@@ -145,14 +143,12 @@ class Document extends DocumentOrElement
 
 	public createElement(qualifiedName: string)
 	{
-		return new Element(this, qualifiedName);
+		return Element.create(this, qualifiedName);
 	}
 
 	public createElementNS(namespaceURI: string | null, qualifiedName: string)
 	{
-		const node = new Element(this, qualifiedName);
-		node.namespaceURI = namespaceURI;
-		return node;
+		return Element.createNS(this, namespaceURI, qualifiedName);
 	}
 
 	public createProcessingInstruction(target: string, data: string)
