@@ -75,7 +75,7 @@ abstract class Node
 
 	public get parentElement(): Element | null
 	{
-		return this._parentNode && isElement(this._parentNode) ? this._parentNode as Element : null;
+		return this._parentNode && isElement(this._parentNode) ? this._parentNode : null;
 	}
 
 	public get parentNode()

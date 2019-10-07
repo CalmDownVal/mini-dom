@@ -8,9 +8,9 @@ function filterDescendants(node: Node, filter: (elem: Element) => boolean, list:
 	{
 		if (isElement(child))
 		{
-			if (filter(child as Element))
+			if (filter(child))
 			{
-				list.push(child as Element);
+				list.push(child);
 			}
 			filterDescendants(child, filter, list);
 		}
@@ -37,12 +37,12 @@ abstract class DocumentOrElement extends Node
 
 	public get children()
 	{
-		return this.childNodes.filter(isElement) as any as Element[];
+		return this.childNodes.filter(isElement);
 	}
 
 	public get firstElementChild()
 	{
-		return (this.childNodes.find(isElement) as Element | undefined) || null;
+		return this.childNodes.find(isElement) || null;
 	}
 
 	public get lastElementChild()
@@ -54,7 +54,7 @@ abstract class DocumentOrElement extends Node
 			const node = this.childNodes[i];
 			if (isElement(node))
 			{
-				return node as Element;
+				return node;
 			}
 		}
 		return null;

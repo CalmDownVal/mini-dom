@@ -9,14 +9,15 @@ import Node from './Node';
 import NodeType from './NodeType';
 import ProcessingInstruction from './ProcessingInstruction';
 import Text from './Text';
+import { isElement } from './utils';
 
 function findId(root: Node, id: string): Element | null
 {
-	if (id && root.nodeType === NodeType.ELEMENT_NODE)
+	if (id && isElement(root))
 	{
-		if ((root as Element).id === id)
+		if (root.id === id)
 		{
-			return root as Element;
+			return root;
 		}
 
 		for (const child of root.childNodes)
@@ -82,7 +83,7 @@ class Document extends DocumentOrElement
 
 	public get documentElement()
 	{
-		return this.firstElementChild as Element;
+		return this.firstElementChild!;
 	}
 
 	public get head()

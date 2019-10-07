@@ -1,3 +1,4 @@
+import Element from './Element';
 import Node from './Node';
 import NodeType from './NodeType';
 
@@ -10,7 +11,7 @@ export function callback(instance: { [index: string]: any }, name: string, ...ar
 	}
 }
 
-export function isElement(node: Node)
+export function isElement(node: Node): node is Element
 {
 	return node.nodeType === NodeType.ELEMENT_NODE;
 }
