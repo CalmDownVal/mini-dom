@@ -20,7 +20,7 @@
 		"build:clean": "rm -rf dist/* && npm run build",
 		"lint": "tslint --project tsconfig.json || true",
 		"prepare": "npm run build:clean && npm run test",
-		"test": "cross-env NODE_OPTIONS=\"--experimental-modules\" mocha --delay script/test.esm.js"
+		"test": "cross-env NODE_OPTIONS=\"--experimental-modules\" mocha --delay script/mocha.cjs"
 	},
 	"devDependencies": {
 		"cross-env": "^6.0.3",
