@@ -1,9 +1,7 @@
-.vscode
-script
-src
-test
+script/
+src/
+test/
 .editorconfig
 .eslintrc
-.gitignore
 tsconfig.json
 tslint.json

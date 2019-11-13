@@ -5,11 +5,11 @@
 		"lib": [
 			"esnext"
 		],
-		"module": "ESNext",
+		"module": "esnext",
 		"newLine": "lf",
 		"outDir": "./dist",
 		"strict": true,
-		"target": "ESNext"
+		"target": "esnext"
 	},
 	"files": [
 		"src/index.ts"
